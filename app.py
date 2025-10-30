@@ -5,7 +5,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import plotly.graph_objects as go
+import plotly.express as px
 import os
+import time
+from datetime import datetime, timedelta
+import json
 
 # Set page config
 st.set_page_config(
@@ -14,7 +18,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Simple neural network model (no torch-geometric dependencies)
+# Simple neural network model
 class SimpleBioModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(SimpleBioModel, self).__init__()
@@ -30,43 +34,41 @@ class SimpleBioModel(nn.Module):
         x = self.fc3(x)
         return x
 
-# Load model with fallback
+# Load model
 @st.cache_resource
 def load_model():
     try:
-        # Find .pth file
         pth_files = [f for f in os.listdir('.') if f.endswith('.pth')]
         if pth_files:
             model_file = pth_files[0]
-            st.success(f"✅ Found model: {model_file}")
-            
-            # Try to load the checkpoint
             checkpoint = torch.load(model_file, map_location='cpu')
-            
-            # Create simple model compatible with your features
-            input_size = 7  # Your 7 features
+            input_size = 7
             model = SimpleBioModel(input_size, 64, 2)
-            
-            # Try to load weights (if compatible)
             try:
                 if 'model_state_dict' in checkpoint:
                     model.load_state_dict(checkpoint['model_state_dict'])
                 else:
                     model.load_state_dict(checkpoint)
-                st.success("✅ Model weights loaded successfully!")
-            except Exception as e:
-                st.info(f"🔄 Using model with default weights: {e}")
-            
+            except:
+                pass
             model.eval()
             return model
         else:
-            st.warning("⚠️ No .pth file found - Using AI Demo Mode")
             return None
-    except Exception as e:
-        st.warning(f"🔄 Model load issue: {e}. Using Demo Mode.")
+    except:
         return None
 
-# Feature descriptions
+# Initialize session state for player management
+if 'players' not in st.session_state:
+    st.session_state.players = {}
+if 'current_player' not in st.session_state:
+    st.session_state.current_player = None
+if 'live_data' not in st.session_state:
+    st.session_state.live_data = {}
+if 'biosensor_running' not in st.session_state:
+    st.session_state.biosensor_running = False
+
+# Feature configurations
 feature_descriptions = {
     'mw': 'Molecular Weight (signal amplitude)',
     'tissue_sweat': 'Sweat Tissue Conductivity',
@@ -78,243 +80,326 @@ feature_descriptions = {
 }
 
 feature_names = list(feature_descriptions.keys())
+feature_ranges = {name: (-2.0, 2.0) for name in feature_names}
 
-# Initialize model
 model = load_model()
 
-# UI Components
-st.title("🏥 AI-Powered Sports Medicine Monitor")
-st.markdown("### Cortisol & Electrolyte Based Injury Risk Prediction")
-
-# Sidebar for input
-st.sidebar.header("🔬 Biomarker Input Parameters")
-
-# Create input fields for each feature
-input_data = {}
-cols = st.sidebar.columns(2)
-
-for i, feature in enumerate(feature_names):
-    with cols[i % 2]:
-        input_data[feature] = st.slider(
-            feature_descriptions[feature],
-            min_value=-2.0,
-            max_value=2.0,
-            value=0.0,
-            step=0.1,
-            key=feature
-        )
-
-# Contextual factors
-st.sidebar.header("🏃 Athlete Context")
-athlete_id = st.sidebar.text_input("Athlete ID", "ATH-001")
-session_type = st.sidebar.selectbox("Session Type", ["Light", "Moderate", "Intense", "Recovery"])
-
 # Prediction function
-def make_prediction(features_array, model):
+def predict_risk(features_array, model):
     try:
-        if model is not None:
-            # Convert to tensor and make prediction
+        if model:
             features_tensor = torch.tensor(features_array, dtype=torch.float32).unsqueeze(0)
-            
             with torch.no_grad():
                 logits = model(features_tensor)
-                probabilities = F.softmax(logits, dim=1)
-                risk_score = probabilities[0][1].item()  # Probability of class 1
-                probs = probabilities[0].tolist()
-            
-            return risk_score, probs
+                probs = F.softmax(logits, dim=1)
+                risk_score = probs[0][1].item()
+                return risk_score, probs[0].tolist()
         else:
-            # Smart demo mode based on input values
-            fatigue_factor = max(0, input_data['rms_feat']) 
-            stress_factor = abs(input_data['tissue_sweat'])
-            variability = abs(input_data['zero_crossings'])
-            
-            # Calculate risk based on biomarker patterns
-            base_risk = 0.3
-            risk_adjustment = (fatigue_factor * 0.2 + 
-                             stress_factor * 0.15 + 
-                             variability * 0.1)
-            
-            risk_score = min(0.9, base_risk + risk_adjustment)
+            # Smart demo based on biomarker patterns
+            fatigue = max(0, features_array[3])  # rms_feat
+            stress = abs(features_array[1])      # tissue_sweat
+            risk_score = min(0.9, 0.3 + fatigue * 0.2 + stress * 0.15)
             return risk_score, [1-risk_score, risk_score]
-        
-    except Exception as e:
-        st.error(f"Prediction error: {e}")
-        # Fallback
-        risk_score = 0.3
-        return risk_score, [0.7, 0.3]
+    except:
+        return 0.3, [0.7, 0.3]
 
-# Prediction button
-if st.sidebar.button("🔮 Assess Injury Risk", type="primary"):
+# Generate simulated live biosensor data
+def generate_live_biosensor_data():
+    base_values = {
+        'mw': np.random.normal(0, 0.5),
+        'tissue_sweat': np.random.normal(-0.2, 0.3),
+        'tissue_urine': np.random.normal(0.1, 0.4),
+        'rms_feat': np.random.normal(0.5, 0.6),
+        'zero_crossings': np.random.normal(0.3, 0.5),
+        'skewness': np.random.normal(0, 0.4),
+        'waveform_length': np.random.normal(0.2, 0.5)
+    }
+    return base_values
+
+# Main UI
+st.title("🏥 AI Sports Medicine Monitor")
+st.markdown("### Advanced Cortisol & Electrolyte Based Injury Risk Prediction")
+
+# Sidebar - Player Management
+st.sidebar.header("👥 Player Management")
+
+# Add new player section
+with st.sidebar.expander("➕ Add New Player", expanded=True):
+    new_player_id = st.text_input("Player ID", "ATH-001")
+    new_player_name = st.text_input("Player Name", "John Doe")
+    new_player_age = st.number_input("Age", 18, 40, 25)
+    new_player_position = st.selectbox("Position", ["Forward", "Midfielder", "Defender", "Goalkeeper"])
     
-    # Create feature array
-    features_array = np.array([input_data[feature] for feature in feature_names])
+    if st.button("Add Player", key="add_player"):
+        player_data = {
+            'name': new_player_name,
+            'age': new_player_age,
+            'position': new_player_position,
+            'created_at': datetime.now().strftime("%Y-%m-%d %H:%M"),
+            'assessment_history': []
+        }
+        st.session_state.players[new_player_id] = player_data
+        st.session_state.current_player = new_player_id
+        st.success(f"✅ Added {new_player_name} ({new_player_id})")
+
+# Player selection
+if st.session_state.players:
+    player_options = [f"{pid} - {data['name']}" for pid, data in st.session_state.players.items()]
+    selected_player = st.sidebar.selectbox("Select Player", player_options)
+    st.session_state.current_player = selected_player.split(" - ")[0]
+
+# Main tabs for different functionalities
+tab1, tab2, tab3, tab4 = st.tabs(["🎯 Risk Assessment", "👥 Player Management", "📊 Live Biosensors", "📈 History & Analytics"])
+
+with tab1:
+    st.header("Real-time Risk Assessment")
     
-    # Make prediction
-    risk_score, probabilities = make_prediction(features_array, model)
-    
-    # Determine risk level
-    if risk_score > 0.7:
-        risk_level = "HIGH"
-        risk_color = "red"
-    elif risk_score > 0.4:
-        risk_level = "MODERATE" 
-        risk_color = "orange"
+    if not st.session_state.players:
+        st.warning("⚠️ Please add a player first in the sidebar")
     else:
-        risk_level = "LOW"
-        risk_color = "green"
+        current_player_id = st.session_state.current_player
+        player_data = st.session_state.players[current_player_id]
+        
+        st.info(f"**Assessing:** {player_data['name']} ({current_player_id}) | {player_data['position']} | Age: {player_data['age']}")
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.subheader("🔬 Manual Biomarker Input")
+            input_data = {}
+            cols = st.columns(2)
+            for i, feature in enumerate(feature_names):
+                with cols[i % 2]:
+                    input_data[feature] = st.slider(
+                        feature_descriptions[feature],
+                        min_value=-2.0,
+                        max_value=2.0,
+                        value=0.0,
+                        step=0.1,
+                        key=f"manual_{feature}"
+                    )
+        
+        with col2:
+            st.subheader("⚡ Quick Actions")
+            if st.button("🎯 Assess Current Biomarkers", type="primary", use_container_width=True):
+                features_array = np.array([input_data[f] for f in feature_names])
+                risk_score, probabilities = predict_risk(features_array, model)
+                
+                # Save assessment to player history
+                assessment = {
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'risk_score': risk_score,
+                    'biomarkers': input_data.copy(),
+                    'recommendations': get_recommendations(risk_score)
+                }
+                st.session_state.players[current_player_id]['assessment_history'].append(assessment)
+                
+                display_results(risk_score, probabilities, input_data)
+            
+            if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
+                if st.session_state.live_data:
+                    features_array = np.array([st.session_state.live_data[f] for f in feature_names])
+                    risk_score, probabilities = predict_risk(features_array, model)
+                    display_results(risk_score, probabilities, st.session_state.live_data)
+                else:
+                    st.warning("No live biosensor data available. Start live monitoring in the Biosensors tab.")
+
+with tab2:
+    st.header("Player Database")
     
-    # Display results
-    st.success("### 🎯 Risk Assessment Complete!")
+    if not st.session_state.players:
+        st.info("No players added yet. Use the sidebar to add players.")
+    else:
+        # Display players table
+        player_list = []
+        for pid, data in st.session_state.players.items():
+            player_list.append({
+                'Player ID': pid,
+                'Name': data['name'],
+                'Age': data['age'],
+                'Position': data['position'],
+                'Assessments': len(data['assessment_history']),
+                'Last Assessment': data['assessment_history'][-1]['timestamp'] if data['assessment_history'] else 'Never'
+            })
+        
+        players_df = pd.DataFrame(player_list)
+        st.dataframe(players_df, use_container_width=True)
+        
+        # Player details
+        if st.session_state.current_player:
+            st.subheader(f"Player Details: {st.session_state.current_player}")
+            player_data = st.session_state.players[st.session_state.current_player]
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Name", player_data['name'])
+                st.metric("Position", player_data['position'])
+            with col2:
+                st.metric("Age", player_data['age'])
+                st.metric("Total Assessments", len(player_data['assessment_history']))
+            
+            # Assessment history
+            if player_data['assessment_history']:
+                st.subheader("Assessment History")
+                history_df = pd.DataFrame(player_data['assessment_history'])
+                st.dataframe(history_df, use_container_width=True)
+
+with tab3:
+    st.header("📡 Live Biosensor Monitoring")
     
-    # Results columns
+    st.info("This simulates real-time biosensor data from wearable devices")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        if st.button("🎬 Start Live Monitoring", type="primary", disabled=st.session_state.biosensor_running):
+            st.session_state.biosensor_running = True
+            st.rerun()
+        
+        if st.button("⏹️ Stop Monitoring", disabled=not st.session_state.biosensor_running):
+            st.session_state.biosensor_running = False
+            st.rerun()
+    
+    with col1:
+        if st.session_state.biosensor_running:
+            st.success("🟢 Live monitoring ACTIVE - Data updating every 5 seconds")
+            
+            # Create placeholder for live data
+            live_placeholder = st.empty()
+            
+            # Simulate live data updates
+            for i in range(10):  # Show 10 updates
+                if not st.session_state.biosensor_running:
+                    break
+                    
+                live_data = generate_live_biosensor_data()
+                st.session_state.live_data = live_data
+                
+                # Display current live values
+                with live_placeholder.container():
+                    st.subheader(" Current Biosensor Readings")
+                    cols = st.columns(4)
+                    for j, (feature, value) in enumerate(live_data.items()):
+                        with cols[j % 4]:
+                            st.metric(
+                                feature_descriptions[feature],
+                                f"{value:.3f}",
+                                delta=None
+                            )
+                    
+                    # Make prediction with live data
+                    features_array = np.array([live_data[f] for f in feature_names])
+                    risk_score, probabilities = predict_risk(features_array, model)
+                    
+                    st.metric(" Live Risk Score", f"{risk_score:.1%}")
+                    
+                    if risk_score > 0.7:
+                        st.error("🚨 High Risk - Consider immediate action")
+                    elif risk_score > 0.4:
+                        st.warning("⚠️ Moderate Risk - Monitor closely")
+                    else:
+                        st.success("✅ Low Risk - Normal range")
+                
+                time.sleep(5)  # Update every 5 seconds
+                st.rerun()
+        else:
+            st.warning("🔴 Live monitoring INACTIVE - Click 'Start Live Monitoring' to begin")
+
+with tab4:
+    st.header("Analytics & History")
+    
+    if not st.session_state.players:
+        st.info("No data available. Add players and conduct assessments first.")
+    else:
+        # Risk distribution across players
+        risk_data = []
+        for pid, data in st.session_state.players.items():
+            if data['assessment_history']:
+                latest_assessment = data['assessment_history'][-1]
+                risk_data.append({
+                    'Player': f"{data['name']} ({pid})",
+                    'Risk Score': latest_assessment['risk_score'],
+                    'Risk Level': 'HIGH' if latest_assessment['risk_score'] > 0.7 else 'MODERATE' if latest_assessment['risk_score'] > 0.4 else 'LOW'
+                })
+        
+        if risk_data:
+            risk_df = pd.DataFrame(risk_data)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                fig = px.bar(risk_df, x='Player', y='Risk Score', 
+                           color='Risk Level', title='Player Risk Scores',
+                           color_discrete_map={'HIGH': 'red', 'MODERATE': 'orange', 'LOW': 'green'})
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                fig_pie = px.pie(risk_df, names='Risk Level', title='Risk Level Distribution',
+                               color='Risk Level',
+                               color_discrete_map={'HIGH': 'red', 'MODERATE': 'orange', 'LOW': 'green'})
+                st.plotly_chart(fig_pie, use_container_width=True)
+
+# Helper functions
+def get_recommendations(risk_score):
+    if risk_score > 0.7:
+        return [
+            "Immediate training intensity reduction",
+            "Electrolyte supplementation required",
+            "Consult sports physician within 24h",
+            "Enhanced hydration protocol"
+        ]
+    elif risk_score > 0.4:
+        return [
+            "Modify training load by 30%",
+            "Ensure 8+ hours recovery sleep",
+            "Monitor hydration levels",
+            "Re-assess in 48 hours"
+        ]
+    else:
+        return [
+            "Maintain current training regimen",
+            "Continue standard monitoring",
+            "Optimal recovery conditions"
+        ]
+
+def display_results(risk_score, probabilities, biomarkers):
+    risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
+    risk_color = "red" if risk_level == "HIGH" else "orange" if risk_level == "MODERATE" else "green"
+    
+    st.success("###  Assessment Complete!")
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        # Risk gauge
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number",
-            value = risk_score * 100,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            title = {'text': "Injury Risk Score"},
-            gauge = {
-                'axis': {'range': [None, 100]},
-                'bar': {'color': risk_color},
-                'steps': [
-                    {'range': [0, 30], 'color': "lightgreen"},
-                    {'range': [30, 70], 'color': "yellow"},
-                    {'range': [70, 100], 'color': "red"}
-                ]
-            }
+            mode="gauge+number", value=risk_score*100,
+            domain={'x': [0,1], 'y': [0,1]},
+            gauge={'axis': {'range': [None, 100]}, 'bar': {'color': risk_color},
+                   'steps': [{'range': [0,30], 'color': "lightgreen"},
+                           {'range': [30,70], 'color': "yellow"},
+                           {'range': [70,100], 'color': "red"}]}
         ))
-        fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
         st.metric("Risk Level", risk_level)
         st.metric("Confidence", f"{max(probabilities):.1%}")
-        st.metric("Athlete ID", athlete_id)
         
-        # Risk factors analysis
-        st.info("**🔍 Risk Indicators:**")
-        if input_data['rms_feat'] > 1.0:
-            st.warning("• Elevated muscle fatigue detected")
-        if input_data['tissue_sweat'] < -1.0:
-            st.warning("• Abnormal sweat conductivity")
-        if input_data['zero_crossings'] > 1.5:
-            st.warning("• High signal variability")
-        if risk_level == "LOW":
-            st.success("• Biomarkers within normal range")
+        st.info("** Risk Indicators:**")
+        if biomarkers['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
+        if biomarkers['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
+        if risk_level == "LOW": st.success("• Biomarkers within normal range")
     
     with col3:
-        st.subheader("📋 Recommendations")
-        
-        if risk_level == "HIGH":
-            st.error("""
-            🚨 **Immediate Action:**
-            • Reduce training intensity
-            • Electrolyte supplementation
-            • Consult sports physician
-            • Close monitoring needed
-            """)
-        elif risk_level == "MODERATE":
-            st.warning("""
-            ⚠️ **Precautions:**
-            • Modify training load
-            • Ensure proper hydration
-            • Extra recovery time
-            • Re-assess in 48h
-            """)
-        else:
-            st.success("""
-            ✅ **Optimal State:**
-            • Maintain current regimen
-            • Standard monitoring
-            • Continue good practices
-            """)
-
-    # Biomarker visualization
-    st.markdown("---")
-    st.subheader("📊 Biomarker Profile")
-    
-    # Radar chart
-    categories = list(feature_descriptions.values())
-    values = [input_data[feat] for feat in feature_names]
-    
-    fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        name='Current Biomarkers'
-    ))
-    fig_radar.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[-2, 2])),
-        showlegend=False,
-        height=400
-    )
-    st.plotly_chart(fig_radar, use_container_width=True)
-
-# Batch processing
-st.markdown("---")
-st.header("📁 Team Batch Screening")
-
-uploaded_file = st.file_uploader("Upload team data (CSV)", type=['csv'])
-if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file)
-        st.write("Data preview:")
-        st.dataframe(df.head())
-        
-        if st.button("🚀 Process Team Assessment"):
-            results = []
-            progress_bar = st.progress(0)
-            
-            for i, row in df.iterrows():
-                # Update progress
-                progress_bar.progress((i + 1) / len(df))
-                
-                features_array = np.array([row.get(feat, 0) for feat in feature_names])
-                risk_score, probabilities = make_prediction(features_array, model)
-                
-                risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
-                
-                results.append({
-                    'Athlete_ID': f'ATH-{i+1:03d}',
-                    'Risk_Score': risk_score,
-                    'Risk_Level': risk_level,
-                    'Confidence': max(probabilities)
-                })
-            
-            results_df = pd.DataFrame(results)
-            st.success(f"✅ Processed {len(results_df)} athletes!")
-            
-            # Display and download
-            st.dataframe(results_df)
-            
-            csv = results_df.to_csv(index=False)
-            st.download_button(
-                label="📥 Download Results",
-                data=csv,
-                file_name="team_assessment.csv",
-                mime="text/csv"
-            )
-            
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.subheader(" Recommendations")
+        recommendations = get_recommendations(risk_score)
+        for rec in recommendations:
+            if risk_level == "HIGH":
+                st.error(f"• {rec}")
+            elif risk_level == "MODERATE":
+                st.warning(f"• {rec}")
+            else:
+                st.success(f"• {rec}")
 
 # Footer
 st.markdown("---")
-st.markdown("*AI Sports Medicine • GNODE Model • Real-time Injury Prevention*")
-
-# Model status in sidebar
-with st.sidebar:
-    st.markdown("---")
-    if model is not None:
-        st.success("✅ AI Model: ACTIVE")
-    else:
-        st.warning("⚠️ AI Model: DEMO MODE")
-    st.markdown("**Features:**")
-    st.write("• Real-time risk assessment")
-    st.write("• Biomarker analysis")
-    st.write("• Clinical recommendations")
+st.markdown("*AI Sports Medicine Platform • Real-time Biosensor Monitoring • Professional Athlete Management*")
