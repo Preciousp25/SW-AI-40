@@ -18,6 +18,68 @@ st.set_page_config(
     layout="wide"
 )
 
+# Helper functions (DEFINED FIRST!)
+def get_recommendations(risk_score):
+    if risk_score > 0.7:
+        return [
+            "Immediate training intensity reduction",
+            "Electrolyte supplementation required",
+            "Consult sports physician within 24h",
+            "Enhanced hydration protocol"
+        ]
+    elif risk_score > 0.4:
+        return [
+            "Modify training load by 30%",
+            "Ensure 8+ hours recovery sleep",
+            "Monitor hydration levels",
+            "Re-assess in 48 hours"
+        ]
+    else:
+        return [
+            "Maintain current training regimen",
+            "Continue standard monitoring",
+            "Optimal recovery conditions"
+        ]
+
+def display_results(risk_score, probabilities, biomarkers):
+    risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
+    risk_color = "red" if risk_level == "HIGH" else "orange" if risk_level == "MODERATE" else "green"
+    
+    st.success("###  Assessment Complete!")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number", value=risk_score*100,
+            domain={'x': [0,1], 'y': [0,1]},
+            gauge={'axis': {'range': [None, 100]}, 'bar': {'color': risk_color},
+                   'steps': [{'range': [0,30], 'color': "lightgreen"},
+                           {'range': [30,70], 'color': "yellow"},
+                           {'range': [70,100], 'color': "red"}]}
+        ))
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.metric("Risk Level", risk_level)
+        st.metric("Confidence", f"{max(probabilities):.1%}")
+        
+        st.info("**🔍 Risk Indicators:**")
+        if biomarkers['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
+        if biomarkers['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
+        if risk_level == "LOW": st.success("• Biomarkers within normal range")
+    
+    with col3:
+        st.subheader("📋 Recommendations")
+        recommendations = get_recommendations(risk_score)
+        for rec in recommendations:
+            if risk_level == "HIGH":
+                st.error(f"• {rec}")
+            elif risk_level == "MODERATE":
+                st.warning(f"• {rec}")
+            else:
+                st.success(f"• {rec}")
+
 # Simple neural network model
 class SimpleBioModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -117,7 +179,7 @@ def generate_live_biosensor_data():
     return base_values
 
 # Main UI
-st.title("🏥 AI Sports Medicine Monitor")
+st.title(" AI Sports Medicine Monitor")
 st.markdown("### Advanced Cortisol & Electrolyte Based Injury Risk Prediction")
 
 # Sidebar - Player Management
@@ -140,7 +202,7 @@ with st.sidebar.expander("➕ Add New Player", expanded=True):
         }
         st.session_state.players[new_player_id] = player_data
         st.session_state.current_player = new_player_id
-        st.success(f"✅ Added {new_player_name} ({new_player_id})")
+        st.success(f" Added {new_player_name} ({new_player_id})")
 
 # Player selection
 if st.session_state.players:
@@ -149,13 +211,13 @@ if st.session_state.players:
     st.session_state.current_player = selected_player.split(" - ")[0]
 
 # Main tabs for different functionalities
-tab1, tab2, tab3, tab4 = st.tabs(["🎯 Risk Assessment", "👥 Player Management", "📊 Live Biosensors", "📈 History & Analytics"])
+tab1, tab2, tab3, tab4 = st.tabs([" Risk Assessment", " Player Management", " Live Biosensors", " History & Analytics"])
 
 with tab1:
     st.header("Real-time Risk Assessment")
     
     if not st.session_state.players:
-        st.warning("⚠️ Please add a player first in the sidebar")
+        st.warning(" Please add a player first in the sidebar")
     else:
         current_player_id = st.session_state.current_player
         player_data = st.session_state.players[current_player_id]
@@ -180,8 +242,8 @@ with tab1:
                     )
         
         with col2:
-            st.subheader("⚡ Quick Actions")
-            if st.button("🎯 Assess Current Biomarkers", type="primary", use_container_width=True):
+            st.subheader(" Quick Actions")
+            if st.button(" Assess Current Biomarkers", type="primary", use_container_width=True):
                 features_array = np.array([input_data[f] for f in feature_names])
                 risk_score, probabilities = predict_risk(features_array, model)
                 
@@ -196,7 +258,7 @@ with tab1:
                 
                 display_results(risk_score, probabilities, input_data)
             
-            if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
+            if st.button(" Use Live Biosensor Data", use_container_width=True):
                 if st.session_state.live_data:
                     features_array = np.array([st.session_state.live_data[f] for f in feature_names])
                     risk_score, probabilities = predict_risk(features_array, model)
@@ -252,11 +314,11 @@ with tab3:
     col1, col2 = st.columns([3, 1])
     
     with col2:
-        if st.button("🎬 Start Live Monitoring", type="primary", disabled=st.session_state.biosensor_running):
+        if st.button(" Start Live Monitoring", type="primary", disabled=st.session_state.biosensor_running):
             st.session_state.biosensor_running = True
             st.rerun()
         
-        if st.button("⏹️ Stop Monitoring", disabled=not st.session_state.biosensor_running):
+        if st.button(" Stop Monitoring", disabled=not st.session_state.biosensor_running):
             st.session_state.biosensor_running = False
             st.rerun()
     
@@ -277,7 +339,7 @@ with tab3:
                 
                 # Display current live values
                 with live_placeholder.container():
-                    st.subheader(" Current Biosensor Readings")
+                    st.subheader("📊 Current Biosensor Readings")
                     cols = st.columns(4)
                     for j, (feature, value) in enumerate(live_data.items()):
                         with cols[j % 4]:
@@ -337,68 +399,6 @@ with tab4:
                                color='Risk Level',
                                color_discrete_map={'HIGH': 'red', 'MODERATE': 'orange', 'LOW': 'green'})
                 st.plotly_chart(fig_pie, use_container_width=True)
-
-# Helper functions
-def get_recommendations(risk_score):
-    if risk_score > 0.7:
-        return [
-            "Immediate training intensity reduction",
-            "Electrolyte supplementation required",
-            "Consult sports physician within 24h",
-            "Enhanced hydration protocol"
-        ]
-    elif risk_score > 0.4:
-        return [
-            "Modify training load by 30%",
-            "Ensure 8+ hours recovery sleep",
-            "Monitor hydration levels",
-            "Re-assess in 48 hours"
-        ]
-    else:
-        return [
-            "Maintain current training regimen",
-            "Continue standard monitoring",
-            "Optimal recovery conditions"
-        ]
-
-def display_results(risk_score, probabilities, biomarkers):
-    risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
-    risk_color = "red" if risk_level == "HIGH" else "orange" if risk_level == "MODERATE" else "green"
-    
-    st.success("###  Assessment Complete!")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=risk_score*100,
-            domain={'x': [0,1], 'y': [0,1]},
-            gauge={'axis': {'range': [None, 100]}, 'bar': {'color': risk_color},
-                   'steps': [{'range': [0,30], 'color': "lightgreen"},
-                           {'range': [30,70], 'color': "yellow"},
-                           {'range': [70,100], 'color': "red"}]}
-        ))
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        st.metric("Risk Level", risk_level)
-        st.metric("Confidence", f"{max(probabilities):.1%}")
-        
-        st.info("** Risk Indicators:**")
-        if biomarkers['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
-        if biomarkers['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
-        if risk_level == "LOW": st.success("• Biomarkers within normal range")
-    
-    with col3:
-        st.subheader(" Recommendations")
-        recommendations = get_recommendations(risk_score)
-        for rec in recommendations:
-            if risk_level == "HIGH":
-                st.error(f"• {rec}")
-            elif risk_level == "MODERATE":
-                st.warning(f"• {rec}")
-            else:
-                st.success(f"• {rec}")
 
 # Footer
 st.markdown("---")
