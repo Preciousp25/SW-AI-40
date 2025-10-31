@@ -1,5 +1,9 @@
-streamlit==1.28.0
-pandas==2.0.3
-numpy==1.24.3
-torch==2.0.1
-plotly==5.15.0
+streamlit
+torch==2.3.0
+torchvision
+torchaudio
+torch-geometric
+torchdiffeq==0.2.3
+pandas
+numpy
+plotly
