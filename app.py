@@ -5,64 +5,72 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import plotly.graph_objects as go
-import os
 import json
+import os
 import random
+from torchdiffeq import odeint
+from torch_geometric.nn import GCNConv
 
 # ---------------------------------
 # PAGE CONFIG
 # ---------------------------------
-st.set_page_config(
-    page_title="AI Sports Medicine Monitor",
-    layout="wide"
-)
+st.set_page_config(page_title="AI Sports Medicine Monitor", layout="wide")
 
 PLAYER_DB = "players.json"
 
 # ---------------------------------
-# MODEL DEFINITIONS
+# GNODE MODEL DEFINITION
 # ---------------------------------
-# Replace this with your GNODE or trained model architecture if different
-class SimpleBioModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(SimpleBioModel, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, output_size)
-        self.dropout = nn.Dropout(0.3)
-    
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = self.dropout(x)
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+class ODEFunc(nn.Module):
+    def __init__(self, in_channels, hidden_channels):
+        super(ODEFunc, self).__init__()
+        self.gc1 = GCNConv(in_channels, hidden_channels)
+        self.gc2 = GCNConv(hidden_channels, hidden_channels)
+
+    def forward(self, t, x):
+        edge_index = torch.tensor([[0], [0]], dtype=torch.long)
+        x = self.gc1(x, edge_index)
+        x = F.relu(x)
+        x = self.gc2(x, edge_index)
         return x
+
+
+class GNODEModel(nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels):
+        super(GNODEModel, self).__init__()
+        self.odefunc = ODEFunc(in_channels, hidden_channels)
+        self.linear = nn.Linear(hidden_channels, out_channels)
+
+    def forward(self, x):
+        t = torch.tensor([0, 1], dtype=torch.float)
+        out = odeint(self.odefunc, x, t, method='rk4', options={'step_size': 0.1})
+        out = out[-1]
+        out = self.linear(out)
+        return out
+
 
 # ---------------------------------
 # MODEL LOADING
 # ---------------------------------
 @st.cache_resource
 def load_model():
-    pth_files = [f for f in os.listdir('.') if f.endswith('.pth')]
-    if not pth_files:
-        st.warning("No model file found. Please upload the trained model.")
+    model_path = "gnode_model.pth"
+    if not os.path.exists(model_path):
+        st.error("Model file not found! Please ensure gnode_model.pth is in the root directory.")
         return None
-    
-    model_file = pth_files[0]
-    st.write(f"Loaded model file: {model_file}")
-    
-    checkpoint = torch.load(model_file, map_location='cpu')
-    input_size = 7
-    model = SimpleBioModel(input_size, 64, 2)
 
-    # Ensure state_dict compatibility
-    if 'model_state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    model = GNODEModel(in_channels=7, hidden_channels=32, out_channels=2)
+    checkpoint = torch.load(model_path, map_location="cpu")
+
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"], strict=False)
     else:
         model.load_state_dict(checkpoint, strict=False)
 
     model.eval()
+    st.success(" GNODE model loaded successfully!")
     return model
+
 
 model = load_model()
 
@@ -139,7 +147,6 @@ elif mode == "Assess Player":
     selected_player = players[selected_id]
     st.info(f"{selected_player['name']} — {selected_player['position']} ({selected_player['team']})")
 
-    # Input mode
     input_mode = st.radio("Data Input Mode", ["Manual Entry", "Live Biosensor Feed"])
 
     input_data = {}
@@ -161,7 +168,6 @@ elif mode == "Assess Player":
         st.success("Live biosensor data received.")
         st.json(input_data)
 
-    # Prediction
     def make_prediction(features_array, model):
         if model is None:
             return 0.5, [0.5, 0.5]
@@ -183,8 +189,6 @@ elif mode == "Assess Player":
 
         risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
         risk_color = {"HIGH": "red", "MODERATE": "orange", "LOW": "green"}[risk_level]
-
-        st.success("Risk assessment complete.")
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -215,7 +219,7 @@ elif mode == "Assess Player":
             if risk_level == "HIGH":
                 st.error("Reduce training intensity; consult a sports physician.")
             elif risk_level == "MODERATE":
-                st.warning("Increase hydration and include recovery sessions.")
+                st.warning("Increase hydration and recovery sessions.")
             else:
                 st.success("Optimal biomarker balance maintained.")
 
@@ -227,39 +231,6 @@ elif mode == "Assess Player":
         fig_radar.add_trace(go.Scatterpolar(r=values, theta=categories, fill='toself'))
         fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[-2, 2])), showlegend=False)
         st.plotly_chart(fig_radar, use_container_width=True)
-
-# ---------------------------------
-# BATCH SCREENING
-# ---------------------------------
-elif mode == "Batch Screening":
-    st.header("Team Batch Screening")
-    uploaded_file = st.file_uploader("Upload team data (CSV)", type=['csv'])
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-        st.write("Data preview:")
-        st.dataframe(df.head())
-        if st.button("Process Team Assessment"):
-            results = []
-            progress = st.progress(0)
-            for i, row in df.iterrows():
-                progress.progress((i+1)/len(df))
-                features = np.array([row.get(f, 0) for f in feature_names])
-                risk, probs = make_prediction(features, model)
-                level = "HIGH" if risk > 0.7 else "MODERATE" if risk > 0.4 else "LOW"
-                results.append({
-                    "Athlete": row.get("Athlete_ID", f"ATH-{i+1:03d}"),
-                    "Risk_Score": risk,
-                    "Risk_Level": level,
-                    "Confidence": max(probs)
-                })
-            results_df = pd.DataFrame(results)
-            st.dataframe(results_df)
-            st.download_button(
-                "Download Results",
-                results_df.to_csv(index=False),
-                "team_assessment.csv",
-                "text/csv"
-            )
 
 # ---------------------------------
 # FOOTER
