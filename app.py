@@ -321,9 +321,9 @@ with tab1:
                 
                 with col_b:
                     st.metric("Injury Risk Probability", f"{probabilities[1]:.1%}")
-                    st.metric("Confidence", f"{max(probabilities):.1%}")
+                   
                     
-                    st.info("**🔍 Risk Indicators:**")
+                    st.info("** Risk Indicators:**")
                     if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
                     if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
                     if risk_level == "LOW": st.success("• Biomarkers within normal range")
