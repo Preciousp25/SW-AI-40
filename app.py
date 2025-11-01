@@ -43,9 +43,9 @@ st.markdown("---")
 # Twilio SMS function
 # -----------------------------
 def send_sms(to_number, message):
-    account_sid = st.secrets["TWILIO_ACCOUNT_SID"]
-    auth_token = st.secrets["TWILIO_AUTH_TOKEN"]
-    from_number = st.secrets["TWILIO_PHONE_NUMBER"]
+    account_sid = st.secrets["AC31d8fb919ba9dc258598c3fa2ff2e9ae"]
+    auth_token = st.secrets["7582341dbaca6fe2084702ab0a74eb2"]
+    from_number = st.secrets["+256754056958"]
 
     client = Client(account_sid, auth_token)
     client.messages.create(
