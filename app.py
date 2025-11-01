@@ -23,7 +23,7 @@ from torchdiffeq import odeint
 # -----------------------------
 st.set_page_config(
     page_title="AI Sports Medicine Monitor",
-    page_icon="🏥",
+    page_icon="👩🏻‍⚕️",
     layout="wide"
 )
 
