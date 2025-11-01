@@ -343,33 +343,25 @@ with tab1:
                     ))
                     st.plotly_chart(fig, use_container_width=True)
                 
-                # Risk Probability & Phone input
+                # Risk Probability 
                 with col_b:
-                    st.metric("Injury Risk Probability", f"{probabilities[1]:.1%}")
-                    
-                    # Prompt for coach/recipient phone number
-                    coach_number = st.text_input(
-                        "📱 Enter coach/recipient phone number (with country code, e.g., +2567XXXXXXX)",
-                        value="+2567"
-                    )
-                    
+                    st.metric("Injury Risk Probability", f"{probabilities[1]:.1%}")   
                     # Send SMS if high risk
+                    coach_number = player_data.get('coach_number', '')
                     if risk_score > 0.7:
-                        if coach_number.strip() != "" and coach_number.startswith("+"):
-                            alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
-                            send_sms(coach_number, alert_msg)
-                            st.success(f"SMS alert sent to {coach_number}")
-                        else:
+                        alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
+                    send_sms(coach_number, alert_msg)
+                    st.success(f"SMS alert sent to {coach_number}")
+            else:
                             st.warning("Please enter a valid phone number to send SMS alert.")
-                    
-                    st.metric("Risk Level", risk_level)
-                    st.info("**Risk Indicators:**")
-                    if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
-                    if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
-                    if risk_level == "LOW": st.success("• Biomarkers within normal range")
+    st.metric("Risk Level", risk_level)
+    st.info("**Risk Indicators:**")
+    if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
+    if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
+    if risk_level == "LOW": st.success("• Biomarkers within normal range")
                 
                 # Recommendations
-                with col_c:
+    with col_c:
                     st.subheader(" Recommendations")
                     for rec in get_recommendations(risk_score):
                         if risk_level == "HIGH":
@@ -380,7 +372,7 @@ with tab1:
                             st.success(f"• {rec}")
             
             # Use Live Biosensor Data
-            if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
+    if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
                 if st.session_state.live_data:
                     features_array = np.array([st.session_state.live_data[f] for f in feature_names])
                     risk_score, probabilities = predict_risk(features_array, model)
@@ -391,23 +383,36 @@ with tab1:
 # -----------------------------
 # Tab2 - Player Management
 # -----------------------------
-with tab2:
-    st.header("Player Database")
-    if not st.session_state.players:
-        st.info("No players added yet.")
-    else:
-        player_list = []
-        for pid, data in st.session_state.players.items():
-            player_list.append({
-                'Player ID': pid,
-                'Name': data['name'],
-                'Age': data['age'],
-                'Position': data['position'],
-                'Assessments': len(data['assessment_history']),
-                'Last Assessment': data['assessment_history'][-1]['timestamp'] if data['assessment_history'] else 'Never'
-            })
-        players_df = pd.DataFrame(player_list)
-        st.dataframe(players_df, use_container_width=True)
+# Sidebar - Player Management
+st.sidebar.header("👥 Player Management")
+with st.sidebar.expander("➕ Add New Player", expanded=True):
+    new_player_id = st.text_input("Player ID", "ATH-001")
+    new_player_name = st.text_input("Player Name", "John Doe")
+    new_player_age = st.number_input("Age", 18, 40, 25)
+    new_player_position = st.selectbox("Position", ["Forward", "Midfielder", "Defender", "Goalkeeper"])
+    
+    # Add coach/recipient phone number here
+    new_coach_number = st.text_input(
+        "📱 Coach/Recipient Phone Number (with country code, e.g., +2567XXXXXXX)",
+        value="+2567"
+    )
+    
+    if st.button("Add Player", key="add_player"):
+        if new_coach_number.strip() == "" or not new_coach_number.startswith("+"):
+            st.warning("Please enter a valid coach phone number.")
+        else:
+            player_data = {
+                'name': new_player_name,
+                'age': new_player_age,
+                'position': new_player_position,
+                'coach_number': new_coach_number,
+                'created_at': datetime.now().strftime("%Y-%m-%d %H:%M"),
+                'assessment_history': []
+            }
+            st.session_state.players[new_player_id] = player_data
+            st.session_state.current_player = new_player_id
+            st.success(f"Added {new_player_name} ({new_player_id}) with coach number {new_coach_number}")
+
 
 # -----------------------------
 # Tab3 - Live Biosensors
