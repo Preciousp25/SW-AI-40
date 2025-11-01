@@ -279,7 +279,7 @@ with tab1:
                 with cols[i % 2]:
                     input_data[feature] = st.slider(
                         feature_descriptions[feature],
-                        min_value=-2.0, max_value=2.0, value=0.0, step=0.1,
+                        min_value=-2.0, max_value=2.0, value=0.0, step=0.01, format="%.2f",
                         key=f"manual_{feature}"
                     )
         with col2:
@@ -360,7 +360,7 @@ with tab3:
                     st.metric("🎯 Live Risk Score", f"{risk_score:.1%}")
                     if risk_score > 0.7: st.error("🚨 High Risk")
                     elif risk_score > 0.4: st.warning("⚠️ Moderate Risk")
-                    else: st.success("✅ Low Risk")
+                    else: st.success(" Low Risk")
                 time.sleep(5)
                 st.rerun()
         else:
