@@ -335,14 +335,27 @@ with tab1:
                 
                 with col_b:
                     st.metric("Injury Risk Probability", f"{probabilities[1]:.1%}")
-                   
-                    
-                    st.info("**Risk Indicators:**")
-                    if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
-                    if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
-                    if risk_level == "LOW": st.success("• Biomarkers within normal range")
+                    # Prompt for coach/recipient phone number
+coach_number = st.text_input(
+    "📱 Enter coach/recipient phone number (with country code, e.g., +2567XXXXXXX)",
+    value="+2567"
+)
+
+# Only send SMS if high risk and a number is provided
+if risk_score > 0.7:  # High risk
+    if coach_number.strip() != "" and coach_number.startswith("+"):
+        alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
+        send_sms(coach_number, alert_msg)
+        st.success(f"SMS alert sent to {coach_number} ")
+    else:
+        st.warning("Please enter a valid phone number to send SMS alert.")
+    st.metric("Risk Level", risk_level)
+    st.info("**Risk Indicators:**")
+    if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
+    if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
+    if risk_level == "LOW": st.success("• Biomarkers within normal range")
                 
-                with col_c:
+    with col_c:
                     st.subheader(" Recommendations")
                     for rec in get_recommendations(risk_score):
                         if risk_level == "HIGH":
