@@ -100,7 +100,8 @@ def display_results(risk_score, probabilities, biomarkers):
 
     with col2:
         st.metric("Risk Level", risk_level)
-        st.metric("Confidence", f"{max(probabilities):.1%}")
+        st.metric("Injury Risk Probability", f"{risk_score:.1%}")
+
         st.info("** Risk Indicators:**")
         if biomarkers['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
         if biomarkers['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
