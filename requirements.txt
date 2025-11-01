@@ -1,9 +1,9 @@
 streamlit
-torch==2.3.0
+torch
 torchvision
 torchaudio
 torch-geometric
-torchdiffeq==0.2.3
+torchdiffeq
 pandas
 numpy
 plotly
