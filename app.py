@@ -15,7 +15,7 @@ from datetime import datetime
 from torch_geometric.nn import GCNConv, knn_graph
 from torch_geometric.data import Data
 from torchdiffeq import odeint
-from twilio.rest import Client
+# from twilio.rest import Client  # SMS functionality commented out
 
 # -----------------------------
 # Page config
@@ -25,6 +25,7 @@ st.set_page_config(
     page_icon="👩🏻‍⚕️",
     layout="wide"
 )
+
 # -----------------------------
 # App Header
 # -----------------------------
@@ -40,19 +41,19 @@ st.markdown(
 st.markdown("---")
 
 # -----------------------------
-# Twilio SMS function
-def send_sms(to_number, message):
-    account_sid = st.secrets["TWILIO_ACCOUNT_SID"]
-    auth_token = st.secrets["TWILIO_AUTH_TOKEN"]
-    from_number = st.secrets["TWILIO_PHONE_NUMBER"]
-
-    client = Client(account_sid, auth_token)
-    client.messages.create(
-        body=message,
-        from_=from_number,
-        to=to_number
-    )
-
+# Twilio SMS function - COMMENTED OUT
+# -----------------------------
+# def send_sms(to_number, message):
+#     account_sid = st.secrets["TWILIO_ACCOUNT_SID"]
+#     auth_token = st.secrets["TWILIO_AUTH_TOKEN"]
+#     from_number = st.secrets["TWILIO_PHONE_NUMBER"]
+# 
+#     client = Client(account_sid, auth_token)
+#     client.messages.create(
+#         body=message,
+#         from_=from_number,
+#         to=to_number
+#     )
 
 # -----------------------------
 # Helper functions
@@ -252,29 +253,32 @@ with st.sidebar.expander("➕ Add New Player", expanded=True):
     new_player_position = st.selectbox(
         "Position", ["Forward", "Midfielder", "Defender", "Goalkeeper"], key="new_player_position"
     )
-    new_coach_number = st.text_input(
-        "📱 Coach/Recipient Phone Number (with country code, e.g., +2567XXXXXXX)",
-        value="+2567",
-        key="new_coach_number"
-    )
+    # Coach phone number input commented out
+    # new_coach_number = st.text_input(
+    #     "📱 Coach/Recipient Phone Number (with country code, e.g., +2567XXXXXXX)",
+    #     value="+2567",
+    #     key="new_coach_number"
+    # )
 
     if st.button("Add Player", key="add_player_btn"):
-        if new_coach_number.strip() == "" or not new_coach_number.startswith("+"):
-            st.warning("Please enter a valid coach phone number (include country code).")
-        elif new_player_id.strip() == "":
+        # SMS validation removed
+        # if new_coach_number.strip() == "" or not new_coach_number.startswith("+"):
+        #     st.warning("Please enter a valid coach phone number (include country code).")
+        if new_player_id.strip() == "":
             st.warning("Please enter a valid Player ID.")
         else:
             player_data = {
                 'name': new_player_name,
                 'age': new_player_age,
                 'position': new_player_position,
-                'coach_number': new_coach_number,
+                # 'coach_number': new_coach_number,  # Removed from player data
                 'created_at': datetime.now().strftime("%Y-%m-%d %H:%M"),
                 'assessment_history': []
             }
             st.session_state.players[new_player_id] = player_data
             st.session_state.current_player = new_player_id
-            st.success(f"Added {new_player_name} ({new_player_id}) with coach number {new_coach_number}")
+            # SMS reference removed from success message
+            st.success(f"Added {new_player_name} ({new_player_id})")
 
 # Player Selection
 if st.session_state.players:
@@ -329,11 +333,12 @@ with tab1:
                 }
                 st.session_state.players[current_player_id]['assessment_history'].append(assessment)
 
-                coach_number = player_data.get('coach_number', '')
-                if risk_score > 0.7 and coach_number:
-                    alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
-                    send_sms(coach_number, alert_msg)
-                    st.success(f"SMS alert sent to {coach_number}")
+                # SMS alert functionality commented out
+                # coach_number = player_data.get('coach_number', '')
+                # if risk_score > 0.7 and coach_number:
+                #     alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
+                #     send_sms(coach_number, alert_msg)
+                #     st.success(f"SMS alert sent to {coach_number}")
 
                 display_results(risk_score, probabilities, input_data)
 
@@ -348,7 +353,8 @@ with tab2:
         for pid, pdata in st.session_state.players.items():
             st.subheader(f"{pdata['name']} ({pid})")
             st.write(f"Position: {pdata['position']} | Age: {pdata['age']}")
-            st.write(f"Coach Phone: {pdata.get('coach_number','N/A')}")
+            # Coach phone display commented out
+            # st.write(f"Coach Phone: {pdata.get('coach_number','N/A')}")
             st.write(f"Assessments: {len(pdata['assessment_history'])}")
 
 # -----------------------------
