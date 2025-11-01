@@ -309,6 +309,9 @@ with tab1:
         with col2:
             st.subheader("⚡ Quick Actions")
             
+            # Initialize risk_level safely
+            risk_level = "N/A"
+            
             # Assess Current Biomarkers
             if st.button("Assess Current Biomarkers", type="primary", use_container_width=True):
                 features_array = np.array([input_data[f] for f in feature_names])
@@ -323,62 +326,28 @@ with tab1:
                 }
                 st.session_state.players[current_player_id]['assessment_history'].append(assessment)
                 
-                # Display results with metrics
+                # Determine risk level
                 risk_level = "HIGH" if risk_score > 0.7 else "MODERATE" if risk_score > 0.4 else "LOW"
-                risk_color = "red" if risk_level == "HIGH" else "orange" if risk_level == "MODERATE" else "green"
                 
-                col_a, col_b, col_c = st.columns(3)
-                
-                # Gauge
-                with col_a:
-                    fig = go.Figure(go.Indicator(
-                        mode="gauge+number",
-                        value=risk_score * 100,
-                        domain={'x':[0,1],'y':[0,1]},
-                        gauge={'axis': {'range':[None,100]},
-                               'bar':{'color':risk_color},
-                               'steps':[{'range':[0,30],'color':'lightgreen'},
-                                        {'range':[30,70],'color':'yellow'},
-                                        {'range':[70,100],'color':'red'}]}
-                    ))
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Risk Probability 
-                with col_b:
-                    st.metric("Injury Risk Probability", f"{probabilities[1]:.1%}")   
-                    # Send SMS if high risk
-                    coach_number = player_data.get('coach_number', '')
-                    if risk_score > 0.7:
-                        alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
+                # Send SMS only if high risk and coach number is valid
+                coach_number = player_data.get('coach_number', '')
+                if risk_score > 0.7 and coach_number:
+                    alert_msg = f"🚨 {player_data['name']} has HIGH injury risk ({risk_score:.1%})! Take immediate action."
                     send_sms(coach_number, alert_msg)
                     st.success(f"SMS alert sent to {coach_number}")
-            else:
-                            st.warning("Please enter a valid phone number to send SMS alert.")
-    st.metric("Risk Level", risk_level)
-    st.info("**Risk Indicators:**")
-    if input_data['rms_feat'] > 1.0: st.warning("• Elevated muscle fatigue")
-    if input_data['tissue_sweat'] < -1.0: st.warning("• Abnormal sweat conductivity")
-    if risk_level == "LOW": st.success("• Biomarkers within normal range")
                 
-                # Recommendations
-    with col_c:
-                    st.subheader(" Recommendations")
-                    for rec in get_recommendations(risk_score):
-                        if risk_level == "HIGH":
-                            st.error(f"• {rec}")
-                        elif risk_level == "MODERATE":
-                            st.warning(f"• {rec}")
-                        else:
-                            st.success(f"• {rec}")
+                # Display results
+                display_results(risk_score, probabilities, input_data)
             
             # Use Live Biosensor Data
-    if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
+            if st.button("🔄 Use Live Biosensor Data", use_container_width=True):
                 if st.session_state.live_data:
                     features_array = np.array([st.session_state.live_data[f] for f in feature_names])
                     risk_score, probabilities = predict_risk(features_array, model)
                     display_results(risk_score, probabilities, st.session_state.live_data)
                 else:
                     st.warning("No live biosensor data available. Start live monitoring in the Biosensors tab.")
+
 
 # -----------------------------
 # Tab2 - Player Management
