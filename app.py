@@ -354,22 +354,42 @@ with tab1:
 # -----------------------------
 # Sidebar - Player Management
 st.sidebar.header("👥 Player Management")
+
 with st.sidebar.expander("➕ Add New Player", expanded=True):
-    new_player_id = st.text_input("Player ID", "ATH-001")
-    new_player_name = st.text_input("Player Name", "John Doe")
-    new_player_age = st.number_input("Age", 18, 40, 25)
-    new_player_position = st.selectbox("Position", ["Forward", "Midfielder", "Defender", "Goalkeeper"])
-    
-    # Add coach/recipient phone number here
-    new_coach_number = st.text_input(
-        "📱 Coach/Recipient Phone Number (with country code, e.g., +2567XXXXXXX)",
-        value="+2567"
+    new_player_id = st.text_input(
+        "Player ID", 
+        "ATH-001", 
+        key="new_player_id"
+    )
+    new_player_name = st.text_input(
+        "Player Name", 
+        "John Peterson", 
+        key="new_player_name"
+    )
+    new_player_age = st.number_input(
+        "Age", 18, 40, 25, 
+        key="new_player_age"
+    )
+    new_player_position = st.selectbox(
+        "Position", 
+        ["Forward", "Midfielder", "Defender", "Goalkeeper"], 
+        key="new_player_position"
     )
     
-    if st.button("Add Player", key="add_player"):
+    new_coach_number = st.text_input(
+        "📱 Coach/Recipient Phone Number (with country code, e.g., +2567XXXXXXX)",
+        value="+2567",
+        key="new_coach_number"
+    )
+    
+    if st.button("Add Player", key="add_player_btn"):
+        # Validate phone number
         if new_coach_number.strip() == "" or not new_coach_number.startswith("+"):
-            st.warning("Please enter a valid coach phone number.")
+            st.warning("Please enter a valid coach phone number (include country code).")
+        elif new_player_id.strip() == "":
+            st.warning("Please enter a valid Player ID.")
         else:
+            # Add player to session state
             player_data = {
                 'name': new_player_name,
                 'age': new_player_age,
@@ -381,6 +401,7 @@ with st.sidebar.expander("➕ Add New Player", expanded=True):
             st.session_state.players[new_player_id] = player_data
             st.session_state.current_player = new_player_id
             st.success(f"Added {new_player_name} ({new_player_id}) with coach number {new_coach_number}")
+
 
 
 # -----------------------------
