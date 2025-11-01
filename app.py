@@ -25,6 +25,19 @@ st.set_page_config(
     page_icon="👩🏻‍⚕️",
     layout="wide"
 )
+# -----------------------------
+# App Header
+# -----------------------------
+st.markdown(
+    """
+    <div style='text-align: center;'>
+        <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
+        <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown("---")
 
 # -----------------------------
 # Twilio SMS function
