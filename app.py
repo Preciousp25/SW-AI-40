@@ -61,64 +61,28 @@ st.markdown(
         color: #1f77b4 !important;
     }
 
-    /* Slider track (main background) */
-    input[type=range] {
-        -webkit-appearance: none !important;
-        width: 100% !important;
+    /* Target Streamlit's internal slider track */
+    div[data-baseweb="slider"] > div {
+        background: #e0e0e0 !important;  /* base (unfilled) track */
         height: 6px !important;
         border-radius: 5px !important;
-        background: linear-gradient(to right, #2ecc71 0%, #2ecc71 var(--val, 50%), #e0e0e0 var(--val, 50%), #e0e0e0 100%) !important;
-        outline: none !important;
-        transition: background 450ms ease-in !important;
     }
 
-    /* Slider thumb (the draggable circle) */
-    input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none !important;
-        appearance: none !important;
-        width: 18px !important;
-        height: 18px !important;
-        border-radius: 50% !important;
-        background: #2ecc71 !important;
-        border: 2px solid white !important;
-        cursor: pointer !important;
-    }
-
-    /* Firefox thumb */
-    input[type=range]::-moz-range-thumb {
-        width: 18px !important;
-        height: 18px !important;
-        border-radius: 50% !important;
-        background: #2ecc71 !important;
-        border: 2px solid white !important;
-        cursor: pointer !important;
-    }
-
-    /* Firefox track */
-    input[type=range]::-moz-range-track {
+    /* Target the filled (active) part of the slider */
+    div[data-baseweb="slider"] > div > div {
+        background: #2ecc71 !important;  /* solid green fill */
         height: 6px !important;
         border-radius: 5px !important;
-        background: linear-gradient(to right, #2ecc71 0%, #2ecc71 var(--val, 50%), #e0e0e0 var(--val, 50%), #e0e0e0 100%) !important;
+    }
+
+    /* Keep thumb styling the same */
+    div[data-baseweb="slider"] span[data-testid="stThumbValue"] {
+        background-color: #2ecc71 !important;
+        color: white !important;
+        border: 2px solid white !important;
+        border-radius: 50% !important;
     }
     </style>
-
-    <script>
-    // Make slider fill respond dynamically
-    const observer = new MutationObserver(() => {
-        const sliders = document.querySelectorAll('input[type="range"]');
-        sliders.forEach(slider => {
-            const updateSlider = () => {
-                const val = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
-                slider.style.setProperty('--val', `${val}%`);
-            };
-            slider.addEventListener('input', updateSlider);
-            updateSlider();
-        });
-    });
-
-    // Watch for Streamlit rerenders
-    observer.observe(document.body, { childList: true, subtree: true });
-    </script>
     """,
     unsafe_allow_html=True
 )
