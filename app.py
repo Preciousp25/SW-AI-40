@@ -2,6 +2,7 @@
 # Imports
 # -----------------------------
 import streamlit as st
+from auth import init_auth_state, login_page, signup_page, welcome_page
 import pandas as pd
 import numpy as np
 import torch
@@ -15,15 +16,24 @@ from datetime import datetime
 from torch_geometric.nn import GCNConv, knn_graph
 from torch_geometric.data import Data
 from torchdiffeq import odeint
-from auth import init_auth_state, login_page, signup_page, welcome_page
 
-# Initialize authentication state
+# -----------------------------
+# Authentication Handling
+# -----------------------------
 init_auth_state()
 
-# -----------------------------
-# Main Application
-# -----------------------------
-def main_app():
+if not st.session_state.logged_in:
+    if st.session_state.auth_page == 'login':
+        login_page()
+    elif st.session_state.auth_page == 'signup':
+        signup_page()
+    else:
+        st.session_state.auth_page = 'login'
+    st.stop()  # Prevent rest of app from loading until logged in
+elif st.session_state.auth_page == 'welcome':
+    welcome_page()
+    st.stop()
+
     # from twilio.rest import Client  # SMS functionality commented out
 
     # -----------------------------
