@@ -17,23 +17,11 @@ from torch_geometric.nn import GCNConv, knn_graph
 from torch_geometric.data import Data
 from torchdiffeq import odeint
 
-# -----------------------------
-# Authentication Handling
-# -----------------------------
-init_auth_state()
 
-if not st.session_state.logged_in:
-    if st.session_state.auth_page == 'login':
-        login_page()
-    elif st.session_state.auth_page == 'signup':
-        signup_page()
-    else:
-        st.session_state.auth_page = 'login'
-    st.stop()  # Prevent rest of app from loading until logged in
-elif st.session_state.auth_page == 'welcome':
-    welcome_page()
-    st.stop()
-
+# -----------------------------
+# Main Application
+# -----------------------------
+def main_app():
     # from twilio.rest import Client  # SMS functionality commented out
 
     # -----------------------------
@@ -49,7 +37,6 @@ elif st.session_state.auth_page == 'welcome':
     # App Header
     # -----------------------------
     import base64
-
     def get_base64_image(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
@@ -72,7 +59,7 @@ elif st.session_state.auth_page == 'welcome':
     st.markdown("---")
 
     # -----------------------------
-    # Header & Button styling
+    # Styling
     # -----------------------------
     st.markdown("""
         <style>
@@ -127,8 +114,8 @@ elif st.session_state.auth_page == 'welcome':
                 gauge={'axis': {'range': [None, 100]}, 'bar': {'color': risk_color},
                     'steps': [{'range': [0,30], 'color': "lightgreen"},
                               {'range': [30,70], 'color': "yellow"},
-                              {'range': [70,100], 'color': "red"}]}
-            ))
+                              {'range': [70,100], 'color': "red"}]})
+            )
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -140,7 +127,7 @@ elif st.session_state.auth_page == 'welcome':
             if risk_level == "LOW": st.success("• Biomarkers within normal range")
 
         with col3:
-            st.subheader(" Recommendations")
+            st.subheader("Recommendations")
             recommendations = get_recommendations(risk_score)
             for rec in recommendations:
                 if risk_level == "HIGH":
@@ -151,7 +138,7 @@ elif st.session_state.auth_page == 'welcome':
                     st.success(f"• {rec}")
 
     # -----------------------------
-    # GNODE Model Definition
+    # GNODE Model Definition + Load
     # -----------------------------
     class ODEFunc(nn.Module):
         def __init__(self, in_channels, hidden_channels, edge_index):
@@ -183,9 +170,6 @@ elif st.session_state.auth_page == 'welcome':
             out = self.linear(out)
             return out
 
-    # -----------------------------
-    # Load GNODE model
-    # -----------------------------
     @st.cache_resource
     def load_gnode_model():
         model_path = "gnode_model.pth"
@@ -209,7 +193,7 @@ elif st.session_state.auth_page == 'welcome':
     model = load_gnode_model()
 
     # -----------------------------
-    # Session State Initialization
+    # Session State Init
     # -----------------------------
     if 'players' not in st.session_state: st.session_state.players = {}
     if 'current_player' not in st.session_state: st.session_state.current_player = None
@@ -217,26 +201,30 @@ elif st.session_state.auth_page == 'welcome':
     if 'biosensor_running' not in st.session_state: st.session_state.biosensor_running = False
 
     # -----------------------------
-    # (Keep your rest of the app logic: sidebar, tabs, etc.)
+    # Sidebar & Footer
     # -----------------------------
-    # You can keep all your original code below, just indented by 4 spaces.
-
     st.sidebar.header("👥 Player Management")
-    # ... (everything else from your original code remains as is)
+    # ... your tabs, sidebar inputs, etc.
 
     st.markdown("---")
     st.markdown("*AI Sports Medicine Platform • Real-time Biosensor Monitoring • Professional Athlete Management*")
 
+
 # -----------------------------
 # Authentication Routing
 # -----------------------------
+init_auth_state()
+
 if not st.session_state.logged_in:
     if st.session_state.auth_page == 'login':
         login_page()
     elif st.session_state.auth_page == 'signup':
         signup_page()
-else:
-    if st.session_state.auth_page == 'welcome':
-        welcome_page()
-    elif st.session_state.auth_page == 'app':
-        main_app()
+    else:
+        st.session_state.auth_page = 'login'
+    st.stop()
+elif st.session_state.auth_page == 'welcome':
+    welcome_page()
+    st.stop()
+elif st.session_state.auth_page == 'app':
+    main_app()
