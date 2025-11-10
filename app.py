@@ -51,6 +51,13 @@ st.markdown(
 
 st.markdown("---")
 # -----------------------------
+st.markdown("""
+    <style>
+    h1, h2, h3, .stSubheader {
+        color: #1f77b4 !important; 
+    }
+    </style>
+""", unsafe_allow_html=True)
 # -----------------------------
 # Twilio SMS function - COMMENTED OUT
 # -----------------------------
