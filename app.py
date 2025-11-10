@@ -30,19 +30,24 @@ st.set_page_config(
 # App Header
 # -----------------------------
 import streamlit as st
+import base64
 
-# Create a centered container
-with st.container():
-    st.markdown(
-        """
-        <div style='text-align: center;'>
-            <img src='AILOGO.png' width='120'>
-            <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
-            <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+def get_base64_image(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode()
+
+image_base64 = get_base64_image("AILOGO.png")
+
+st.markdown(
+    f"""
+    <div style='text-align: center;'>
+        <img src="data:image/png;base64,{image_base64}" width="120">
+        <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
+        <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown("---")
 
