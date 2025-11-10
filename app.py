@@ -51,65 +51,6 @@ st.markdown(
 
 st.markdown("---")
 # -----------------------------
-# Custom Dynamic Slider Styling
-# -----------------------------
-st.markdown(
-    """
-    <style>
-    /* Keep titles blue */
-    h1, h2, h3, .stSubheader {
-        color: #1f77b4 !important;
-    }
-
-    /* Target Streamlit slider container */
-    div[data-baseweb="slider"] > div {
-        background-color: #e0e0e0 !important;  /* unfilled track */
-        height: 6px !important;
-        border-radius: 5px !important;
-    }
-
-    /* Fill the track dynamically with green using CSS variable */
-    div[data-baseweb="slider"] > div > div {
-        background-color: #2ecc71 !important;  /* green fill */
-        height: 6px !important;
-        border-radius: 5px !important;
-        width: var(--slider-percent, 50%) !important;  /* will be updated by JS */
-        transition: width 0.2s ease-in-out;
-    }
-
-    /* Thumb (circle) stays as is */
-    div[data-baseweb="slider"] span[data-testid="stThumbValue"] {
-        background-color: #2ecc71 !important;
-        border: 2px solid white !important;
-        border-radius: 50% !important;
-    }
-    </style>
-
-    <script>
-    // Update CSS variable dynamically as slider moves
-    const updateSliders = () => {
-        const sliders = document.querySelectorAll('div[data-baseweb="slider"]');
-        sliders.forEach(slider => {
-            const input = slider.querySelector('input[type="range"]');
-            if (input) {
-                const percent = ((input.value - input.min) / (input.max - input.min)) * 100;
-                const fill = slider.querySelector('div > div');
-                if (fill) fill.style.setProperty('--slider-percent', percent + '%');
-            }
-        });
-    }
-
-    // Initial update
-    setTimeout(updateSliders, 100);
-    // Update on any input event
-    document.body.addEventListener('input', updateSliders);
-    </script>
-    """,
-    unsafe_allow_html=True
-)
-
-
-
 # -----------------------------
 # Twilio SMS function - COMMENTED OUT
 # -----------------------------
