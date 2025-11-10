@@ -31,21 +31,12 @@ st.set_page_config(
 # -----------------------------
 import streamlit as st
 
-# Create a container and center content
+# Create a centered container
 with st.container():
     st.markdown(
         """
         <div style='text-align: center;'>
-        """, 
-        unsafe_allow_html=True
-    )
-    
-    st.image("AILOGO.png", width=80)
-    
-    st.markdown(
-        """
-        </div>
-        <div style='text-align: center;'>       
+            <img src='AILOGO.png' width='120'>
             <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
             <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
         </div>
@@ -54,6 +45,7 @@ with st.container():
     )
 
 st.markdown("---")
+
 
 # -----------------------------
 # Twilio SMS function - COMMENTED OUT
