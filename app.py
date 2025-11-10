@@ -29,24 +29,30 @@ st.set_page_config(
 # -----------------------------
 # App Header
 # -----------------------------
-st.markdown(
-    """
-    <div style='text-align: center; margin: 0 auto;'>
-        <img src="AILOGO.png" width="80" style="display: block; margin-left: auto; margin-right: auto;">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+import streamlit as st
 
-st.markdown(
-    """
-    <div style='text-align: center;'>       
-        <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
-        <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# Create a container and center content
+with st.container():
+    st.markdown(
+        """
+        <div style='text-align: center;'>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    st.image("AILOGO.png", width=80)
+    
+    st.markdown(
+        """
+        </div>
+        <div style='text-align: center;'>       
+            <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
+            <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 st.markdown("---")
 
 # -----------------------------
