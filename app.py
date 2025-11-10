@@ -56,9 +56,9 @@ st.markdown("---")
 st.markdown(
     """
     <style>
-    /* Apply consistent blue styling */
+    /* Apply consistent green styling */
     h1, h2, h3, .stSubheader {
-        color: #1f77b4 !important;
+        color: #2ecc71 !important;  /* Green titles */
     }
 
     /* Slider track (dynamic fill for Chrome, Edge, Safari) */
@@ -67,7 +67,7 @@ st.markdown(
         width: 100%;
         height: 6px;
         border-radius: 5px;
-        background: linear-gradient(90deg, #1f77b4 50%, #e0e0e0 50%);
+        background: linear-gradient(90deg, #2ecc71 50%, #e0e0e0 50%);
         outline: none;
         transition: background 450ms ease-in;
     }
@@ -79,7 +79,7 @@ st.markdown(
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #1f77b4;
+        background: #2ecc71;
         border: 2px solid white;
         cursor: pointer;
     }
@@ -89,7 +89,7 @@ st.markdown(
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #1f77b4;
+        background: #2ecc71;
         border: 2px solid white;
         cursor: pointer;
     }
@@ -97,7 +97,7 @@ st.markdown(
     input[type=range]::-moz-range-track {
         height: 6px;
         border-radius: 5px;
-        background: linear-gradient(90deg, #1f77b4 50%, #e0e0e0 50%);
+        background: linear-gradient(90deg, #2ecc71 50%, #e0e0e0 50%);
     }
 
     /* Update background dynamically based on value */
@@ -112,7 +112,7 @@ st.markdown(
 
     /* Trick to simulate dynamic fill color */
     input[type=range] {
-        background: linear-gradient(to right, #1f77b4 0%, #1f77b4 var(--val, 50%), #e0e0e0 var(--val, 50%), #e0e0e0 100%);
+        background: linear-gradient(to right, #2ecc71 0%, #2ecc71 var(--val, 50%), #e0e0e0 var(--val, 50%), #e0e0e0 100%);
     }
     </style>
 
@@ -131,6 +131,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
