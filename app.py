@@ -223,6 +223,14 @@ def main_app():
     # -----------------------------
     # Sidebar - Player Management
     # -----------------------------
+    # -----------------------------
+# Logout Button
+# -----------------------------
+st.sidebar.markdown("---")
+if st.sidebar.button(" Logout"):
+    st.session_state.logged_in = False
+    st.session_state.auth_page = "login"
+    st.experimental_rerun()
     st.sidebar.header("👥 Player Management")
     with st.sidebar.expander("➕ Add New Player", expanded=True):
         new_player_id = st.text_input("Player ID", "ATH-001", key="new_player_id")
