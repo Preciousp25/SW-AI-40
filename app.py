@@ -29,8 +29,8 @@ st.set_page_config(
 # -----------------------------
 # App Header
 # -----------------------------
-col1, col2, col3, col4 = st.columns([1, 4, 1, 1])
-with col2:
+col1, col2, col3, col4, col5 = st.columns([1, 4, 1, 1, 1])
+with col3:
     st.image("AILOGO.png", width=80)
 st.markdown(
     """
