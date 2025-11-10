@@ -42,7 +42,7 @@ st.markdown(
     f"""
     <div style='display: flex; align-items: center; justify-content: center; gap: 15px;'>
         <img src="data:image/png;base64,{image_base64}" width="80" style="vertical-align: middle;">
-        <h1 style='color: #1f77b4; font-size:30px; display: inline-block; margin: 0;'>InjuryGuard AI</h1>
+        <h1 style='color: #1f77b4; font-size:60px; display: inline-block; margin: 0;'>InjuryGuard AI</h1>
     </div>
     <p style='text-align: center; font-size:18px; margin-top:5px;'>
         AI-powered Real-time Athlete Injury Monitoring Platform
