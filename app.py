@@ -22,13 +22,16 @@ from torchdiffeq import odeint
 # -----------------------------
 st.set_page_config(
     page_title="AI Sports Medicine Monitor",
-    page_icon="👩🏻‍⚕️",
+    page_icon="AILOGO.png",
     layout="wide"
 )
 
 # -----------------------------
 # App Header
 # -----------------------------
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image("AILOGO.png", width=150)
 st.markdown(
     """
     <div style='text-align: center;'>
