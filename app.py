@@ -29,9 +29,9 @@ st.set_page_config(
 # -----------------------------
 # App Header
 # -----------------------------
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.image("AILOGO.png", width=150)
+col1, col2 = st.columns([1, 4])
+with col1:
+    st.image("AILOGO.png", width=80)
 st.markdown(
     """
     <div style='text-align: center;'>
