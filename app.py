@@ -40,10 +40,12 @@ image_base64 = get_base64_image("AILOGO.png")
 
 st.markdown(
     f"""
-    <div style='text-align: center;'>
-        <img src="data:image/png;base64,{image_base64}" width="120">
-        <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
-        <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
+    <div style='display: flex; align-items: center; justify-content: center; gap: 15px;'>
+        <img src="data:image/png;base64,{image_base64}" width="60" style="vertical-align: middle;">
+        <div>
+            <h1 style='color: #1f77b4; margin: 0;'>InjuryGuard AI</h1>
+            <p style='font-size:18px; margin: 0;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
+        </div>
     </div>
     """,
     unsafe_allow_html=True
