@@ -51,6 +51,7 @@ st.markdown(
 
 st.markdown("---")
 # -----------------------------
+# Header styling
 st.markdown("""
     <style>
     h1, h2, h3, .stSubheader {
@@ -70,43 +71,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# Slider styling
-st.markdown("""
-    <style>
-    /* Slider track (the line behind the thumb) */
-    input[type=range]::-webkit-slider-runnable-track {
-        background: #28a745;  /* green track */
-        height: 8px;
-        border-radius: 4px;
-    }
-
-    /* Slider thumb (the draggable circle) */
-    input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        background: #ff5722;  /* orange thumb */
-        border: none;
-        height: 20px;
-        width: 20px;
-        border-radius: 50%;
-        margin-top: -6px;  /* center the thumb on the track */
-    }
-
-    /* Firefox */
-    input[type=range]::-moz-range-track {
-        background: #28a745;
-        height: 8px;
-        border-radius: 4px;
-    }
-    input[type=range]::-moz-range-thumb {
-        background: #ff5722;
-        height: 20px;
-        width: 20px;
-        border-radius: 50%;
-        border: none;
-    }
-    </style>
-""", unsafe_allow_html=True)
 # -----------------------------
 # Twilio SMS function - COMMENTED OUT
 # -----------------------------
