@@ -29,9 +29,15 @@ st.set_page_config(
 # -----------------------------
 # App Header
 # -----------------------------
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.image("AILOGO.png", width=80)
+st.markdown(
+    """
+    <div style='text-align: center; margin: 0 auto;'>
+        <img src="AILOGO.png" width="80" style="display: block; margin-left: auto; margin-right: auto;">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.markdown(
     """
     <div style='text-align: center;'>       
