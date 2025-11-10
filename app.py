@@ -44,8 +44,8 @@ st.markdown(
         <img src="data:image/png;base64,{image_base64}" width="80" style="vertical-align: middle;">
         <h1 style='color: #1f77b4; font-size:60px; display: inline-block; margin: 0;'>InjuryGuard AI</h1>
     </div>
-    <p style='text-align: center; font-size:18px; margin-top:5px;'>
-        AI-powered Real-time Athlete Injury Monitoring Platform
+    <p style='text-align: center; font-style: italic; font-size:15px; margin-top:5px;'>
+       Shifting from Reactive Treatment to Proactive Prevention
     </p>
     """,
     unsafe_allow_html=True
