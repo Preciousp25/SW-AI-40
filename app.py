@@ -15,6 +15,25 @@ from datetime import datetime
 from torch_geometric.nn import GCNConv, knn_graph
 from torch_geometric.data import Data
 from torchdiffeq import odeint
+from auth import init_auth_state, login_page, signup_page, welcome_page
+
+# Initialize authentication state
+init_auth_state()
+
+# -----------------------------
+# Authentication Routing
+# -----------------------------
+if not st.session_state.logged_in:
+    if st.session_state.auth_page == 'login':
+        login_page()
+    elif st.session_state.auth_page == 'signup':
+        signup_page()
+else:
+    if st.session_state.auth_page == 'welcome':
+        welcome_page()
+    elif st.session_state.auth_page == 'app':
+        # ↓↓↓ Your existing InjuryGuard AI app starts here ↓↓↓
+
 # from twilio.rest import Client  # SMS functionality commented out
 
 # -----------------------------
