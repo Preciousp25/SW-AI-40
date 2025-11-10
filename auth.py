@@ -1,5 +1,8 @@
 import streamlit as st
 
+# -----------------------------
+# Initialize authentication session state
+# -----------------------------
 def init_auth_state():
     if 'users' not in st.session_state:
         st.session_state.users = {'demo': '1234'}
@@ -11,6 +14,9 @@ def init_auth_state():
         st.session_state.auth_page = 'login'
 
 
+# -----------------------------
+# Login Page
+# -----------------------------
 def login_page():
     st.title("🔐 Login to InjuryGuard AI")
     username = st.text_input("Username", key="login_username")
@@ -21,16 +27,19 @@ def login_page():
             st.session_state.logged_in = True
             st.session_state.current_user = username
             st.session_state.auth_page = 'welcome'
-            st.rerun()  # ✅ updated
+            st.stop()  # Stop current run; app routing handles next page
         else:
             st.error("Invalid username or password")
 
     st.write("---")
-    if st.button("Create new account"):
+    if st.button("Create new account", key="to_signup_btn"):
         st.session_state.auth_page = 'signup'
-        st.rerun()  # ✅ updated
+        st.stop()
 
 
+# -----------------------------
+# Signup Page
+# -----------------------------
 def signup_page():
     st.title("📝 Create an Account")
     username = st.text_input("Choose Username", key="signup_username")
@@ -48,25 +57,28 @@ def signup_page():
             st.session_state.users[username] = password
             st.success("Account created! Please log in.")
             st.session_state.auth_page = 'login'
-            st.rerun()  # ✅ updated
+            st.stop()
 
     st.write("---")
-    if st.button("Back to login"):
+    if st.button("Back to login", key="back_to_login_btn"):
         st.session_state.auth_page = 'login'
-        st.rerun()  # ✅ updated
+        st.stop()
 
 
+# -----------------------------
+# Welcome Page
+# -----------------------------
 def welcome_page():
-    st.title("🏆 Welcome to InjuryGuard AI")
+    st.title("🎉 Welcome to InjuryGuard AI")
     st.subheader(f"Hello, {st.session_state.current_user}!")
     st.markdown("Use AI-driven analysis to predict and prevent sports injuries.")
 
     if st.button("Start Screening"):
         st.session_state.auth_page = 'app'
-        st.rerun()  # ✅ updated
+        st.stop()
 
     if st.button("Logout"):
         st.session_state.logged_in = False
-        st.session_state.auth_page = 'login'
         st.session_state.current_user = None
-        st.rerun()  # ✅ updated
+        st.session_state.auth_page = 'login'
+        st.stop()
