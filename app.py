@@ -50,6 +50,88 @@ st.markdown(
 )
 
 st.markdown("---")
+# -----------------------------
+# Custom Dynamic Slider Styling
+# -----------------------------
+st.markdown(
+    """
+    <style>
+    /* Apply consistent blue styling */
+    h1, h2, h3, .stSubheader {
+        color: #1f77b4 !important;
+    }
+
+    /* Slider track (dynamic fill for Chrome, Edge, Safari) */
+    input[type=range] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #1f77b4 50%, #e0e0e0 50%);
+        outline: none;
+        transition: background 450ms ease-in;
+    }
+
+    /* Slider thumb */
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #1f77b4;
+        border: 2px solid white;
+        cursor: pointer;
+    }
+
+    /* Firefox support */
+    input[type=range]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #1f77b4;
+        border: 2px solid white;
+        cursor: pointer;
+    }
+
+    input[type=range]::-moz-range-track {
+        height: 6px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #1f77b4 50%, #e0e0e0 50%);
+    }
+
+    /* Update background dynamically based on value */
+    input[type=range]:focus {
+        outline: none;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 5px;
+    }
+
+    /* Trick to simulate dynamic fill color */
+    input[type=range] {
+        background: linear-gradient(to right, #1f77b4 0%, #1f77b4 var(--val, 50%), #e0e0e0 var(--val, 50%), #e0e0e0 100%);
+    }
+    </style>
+
+    <script>
+    // JavaScript to make the slider fill dynamic in Streamlit
+    const sliders = document.querySelectorAll('input[type="range"]');
+    sliders.forEach(slider => {
+        const updateSlider = (e) => {
+            const val = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+            slider.style.setProperty('--val', `${val}%`);
+        };
+        slider.addEventListener('input', updateSlider);
+        updateSlider(); // Initialize
+    });
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
 # -----------------------------
