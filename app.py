@@ -17,23 +17,9 @@ from torch_geometric.data import Data
 from torchdiffeq import odeint
 from auth import init_auth_state, login_page, signup_page, welcome_page
 
-# Initialize authentication state
 init_auth_state()
 
-# -----------------------------
-# Authentication Routing
-# -----------------------------
-if not st.session_state.logged_in:
-    if st.session_state.auth_page == 'login':
-        login_page()
-    elif st.session_state.auth_page == 'signup':
-        signup_page()
-else:
-    if st.session_state.auth_page == 'welcome':
-        welcome_page()
-    elif st.session_state.auth_page == 'app':
-        # ↓↓↓ Your existing InjuryGuard AI app starts here ↓↓↓
-
+def main_app():
 # from twilio.rest import Client  # SMS functionality commented out
 
 # -----------------------------
@@ -485,3 +471,13 @@ with tab4:
 # -----------------------------
 st.markdown("---")
 st.markdown("*AI Sports Medicine Platform • Real-time Biosensor Monitoring • Professional Athlete Management*")
+if not st.session_state.logged_in:
+    if st.session_state.auth_page == 'login':
+        login_page()
+    elif st.session_state.auth_page == 'signup':
+        signup_page()
+else:
+    if st.session_state.auth_page == 'welcome':
+        welcome_page()
+    elif st.session_state.auth_page == 'app':
+        main_app()
