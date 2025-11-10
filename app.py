@@ -59,6 +59,17 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 # -----------------------------
+# Button styling
+st.markdown("""
+    <style>
+    div.stButton > button:first-child {
+        background-color: #1f77b4;
+        color: white;
+        border-radius: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+# -----------------------------
 # Twilio SMS function - COMMENTED OUT
 # -----------------------------
 # def send_sms(to_number, message):
@@ -310,15 +321,6 @@ if st.session_state.players:
 tab1, tab2, tab3, tab4 = st.tabs(["Risk Assessment", "Player Management", "Live Biosensors", "History & Analytics"])
 
 # -----------------------------
-st.markdown("""
-    <style>
-    div.stButton > button:first-child {
-        background-color: #1f77b4;
-        color: white;
-        border-radius: 8px;
-    }
-    </style>
-""", unsafe_allow_html=True)
 # -----------------------------
 # Tab1 - Risk Assessment
 # -----------------------------
