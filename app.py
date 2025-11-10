@@ -21,7 +21,7 @@ from torchdiffeq import odeint
 # Page config
 # -----------------------------
 st.set_page_config(
-    page_title="AI Sports Medicine Monitor",
+    page_title="InjuryGuard AI",
     page_icon="AILOGO.png",
     layout="wide"
 )
