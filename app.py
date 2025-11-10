@@ -29,12 +29,10 @@ st.set_page_config(
 # -----------------------------
 # App Header
 # -----------------------------
-col1, col2, col3, col4, col5 = st.columns([1, 4, 1, 1, 1])
-with col3:
-    st.image("AILOGO.png", width=80)
 st.markdown(
     """
     <div style='text-align: center;'>
+        <img src="AILOGO.png" width="80">
         <h1 style='color: #1f77b4;'>InjuryGuard AI</h1>
         <p style='font-size:18px;'>AI-powered Real-time Athlete Injury Monitoring Platform</p>
     </div>
