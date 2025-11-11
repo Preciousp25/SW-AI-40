@@ -15,13 +15,6 @@ from datetime import datetime
 from torch_geometric.nn import GCNConv, knn_graph
 from torch_geometric.data import Data
 from torchdiffeq import odeint
-
-from auth import init_auth_state, login_page, signup_page, welcome_page
-
-# -----------------------------
-# Main Application
-# -----------------------------
-def main_app():
     # -----------------------------
     # Page config
     # -----------------------------
@@ -370,18 +363,3 @@ def main_app():
     st.markdown("---")
     st.markdown("*AI Sports Medicine Platform • Real-time Biosensor Monitoring • Professional Athlete Management*")
 
-# -----------------------------
-# Authentication Routing
-# -----------------------------
-init_auth_state()
-
-if not st.session_state.logged_in:
-    if st.session_state.auth_page == 'login': login_page()
-    elif st.session_state.auth_page == 'signup': signup_page()
-    else: st.session_state.auth_page = 'login'
-    st.stop()
-elif st.session_state.auth_page == 'welcome':
-    welcome_page()
-    st.stop()
-elif st.session_state.auth_page == 'app':
-    main_app()
